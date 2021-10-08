@@ -1,56 +1,77 @@
 import { useEffect, useState } from "react";
-import json from "../../assets/db.json";
-import { Balance } from "../../models/balance";
-import { Bill } from "../../models/bill";
+import categories_json from "../../assets/categories.json";
+import releases_json from "../../assets/releases.json";
+import { Balance, TreeNode } from "../../models/balance";
+import { Category } from "../../models/category";
 import "./home.css";
 
+const balance = new Balance(releases_json, categories_json);
+
+const currencyFormatter = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
 export default function Home() {
-  const [data, setData] = useState<Balance>([]);
-  const [flatData, setFlatData] = useState<Balance>([]);
+  const [data, setData] = useState<TreeNode[]>([]);
+  const [flatData, setFlatData] = useState<TreeNode[]>([]);
 
   useEffect(() => {
-    function recursive(curr: Bill, idx: number, sid: string): Bill {
-      sid += idx === curr.contas.length - 1 ? "" : `${idx + 1}`;
+    function recursiveUpdateIndex(
+      curr: TreeNode<Category>,
+      idx: number,
+      sid: string
+    ): TreeNode {
+      sid += idx === curr.children.length - 1 ? "" : `${idx + 1}`;
       return {
-        ...curr,
-        id: sid,
-        contas: curr.contas.map((bill, idx) => {
-          return recursive(bill, idx, `${sid}.`);
-        }),
+        data: {
+          ...curr.data,
+          id: sid,
+        },
+        children: curr.children.map((child, idx: number) =>
+          recursiveUpdateIndex(child, idx, `${sid}.`)
+        ),
       };
     }
-    setData((json as Balance).map((bill, idx) => recursive(bill, idx, "")));
+
+    setData(
+      balance.categoryTree.children.map((child, idx: number) =>
+        recursiveUpdateIndex(child, idx, "")
+      )
+    );
   }, []);
 
   useEffect(() => {
-    function recursive(curr: Bill): any[] {
-      return curr.contas.length
-        ? [curr, ...curr.contas.map(recursive).flat()]
+    function recursiveFlat(curr: TreeNode<Category>): TreeNode<Category>[] {
+      return curr.children.length
+        ? [curr, ...curr.children.map(recursiveFlat).flat()]
         : [curr];
     }
-    setFlatData(data.map(recursive).flat());
+    setFlatData(data.map(recursiveFlat).flat());
   }, [data]);
 
   function renderPatrimonialBalance() {
-    // function recursiveBills(curr: Bill) {
+    // function recursiveBills(curr: TreeNode<Category>) {
     //   return (
-    //     <li key={curr.id}>
-    //       <strong>{curr.nome}</strong>
-    //       <ol>{curr.contas.map((b) => recursiveBills(b))}</ol>
+    //     <li key={curr.data.id}>
+    //       <strong>{curr.data.name}</strong>
+    //       <ol>{curr.children.map((b: TreeNode<Category>) => recursiveBills(b))}</ol>
     //     </li>
     //   );
     // }
 
-    function renderBillInfo(bill: Bill) {
+    function renderBillInfo(bill: TreeNode<Category>) {
       return (
-        <tr key={bill.id}>
+        <tr key={bill.data.id}>
           <td style={{ paddingLeft: "1rem" }}>
-            <strong>{bill.id}</strong>
+            <strong>{bill.data.id}</strong>
           </td>
-          <td style={{ fontWeight: !bill.contas.length ? "normal" : "bold" }}>
-            {bill.nome}
+          <td style={{ fontWeight: !bill.children.length ? "normal" : "bold" }}>
+            {bill.data.name}
           </td>
-          <td>R$ {bill.valor}</td>
+          <td>{currencyFormatter.format(bill.data.initial_value)}</td>
         </tr>
       );
     }
@@ -70,7 +91,7 @@ export default function Home() {
             </thead>
             <tbody>
               {flatData
-                .filter((b) => !b.id.startsWith("2"))
+                .filter((b: TreeNode) => b.data.id.startsWith("1"))
                 .map(renderBillInfo)}
             </tbody>
           </table>
@@ -79,12 +100,14 @@ export default function Home() {
             <thead>
               <tr>
                 <th>id</th>
-                <th>Contas Ativas</th>
+                <th>Contas Passivas</th>
                 <th>Valor</th>
               </tr>
             </thead>
             <tbody>
-              {flatData.filter((b) => b.id.startsWith("2")).map(renderBillInfo)}
+              {flatData
+                .filter((b: TreeNode) => b.data.id.startsWith("2"))
+                .map(renderBillInfo)}
             </tbody>
           </table>
         </div>
