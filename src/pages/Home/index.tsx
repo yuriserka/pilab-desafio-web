@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import categories_json from "../../assets/categories.json";
 import releases_json from "../../assets/releases.json";
-import { Balance, TreeNode } from "../../models/balance";
+import { Balance } from "../../models/balance";
 import { Category } from "../../models/category";
+import { TreeNode } from "../../models/tree-node";
 import "./home.css";
 
 const balance = new Balance(releases_json, categories_json);
@@ -30,14 +31,14 @@ export default function Home() {
           ...curr.data,
           id: sid,
         },
-        children: curr.children.map((child, idx: number) =>
+        children: curr.children.map((child, idx) =>
           recursiveUpdateIndex(child, idx, `${sid}.`)
         ),
       };
     }
 
     setData(
-      balance.categoryTree.children.map((child, idx: number) =>
+      balance.categoryTree.children.map((child, idx) =>
         recursiveUpdateIndex(child, idx, "")
       )
     );
@@ -96,7 +97,7 @@ export default function Home() {
             </tbody>
           </table>
 
-          <table style={{ marginLeft: "2rem" }}>
+          <table className="passive-table">
             <thead>
               <tr>
                 <th>id</th>

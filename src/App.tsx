@@ -7,7 +7,7 @@ export default function App() {
         display: "flex",
         flexDirection: "column",
         flex: 1,
-        height: "95vh",
+        height: "100vh",
       }}
     >
       <Home />

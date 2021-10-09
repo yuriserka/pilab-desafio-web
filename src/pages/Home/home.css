@@ -21,6 +21,23 @@ li:before {
 .tables {
   display: flex;
   width: 85%;
+  flex-direction: row;
+}
+
+.passive-table {
+  margin-left: 2rem;
+}
+
+@media only screen and (max-width: 600px) {
+  .tables {
+    flex-direction: column;
+    width: 95%;
+  }
+
+  .passive-table {
+    margin-left: 0;
+    margin-top: 2rem;
+  }
 }
 
 table {

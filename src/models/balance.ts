@@ -1,10 +1,6 @@
 import { Category } from "./category";
 import { Release } from "./release";
-
-export type TreeNode<T = any> = {
-  data: T;
-  children: TreeNode<T>[];
-};
+import { TreeNode } from "./tree-node";
 
 export class Balance {
   categoryTree: TreeNode<Category>;
@@ -74,7 +70,7 @@ export class Balance {
           initial_value: node.children.length
             ? node.children.reduce(
                 (acc, child) => acc + child.data.initial_value,
-                0
+                node.data.initial_value
               )
             : node.data.initial_value,
         },
